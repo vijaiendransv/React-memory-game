@@ -8,7 +8,8 @@ export default class Game extends Component {
 		this.state = {
 			openCard: '',
 			totalClickCount: 0,
-			cardsMatched: 0
+			cardsMatched: 0,
+			isboardLocked: false
 		};
 		this.matchCards = this.matchCards.bind(this);
 		this.prepareCards = this.prepareCards.bind(this);
@@ -19,7 +20,7 @@ export default class Game extends Component {
 
 	matchCards(card) {
 
-		if(card.props.isMatched || card.props.isFlipped) return;
+		if(card.props.isMatched || card.props.isFlipped || this.state.isboardLocked) return;
 
 		let newTileIdx = !!card ? card.props.idx : '';
 		let cards = this.cards;
@@ -35,8 +36,10 @@ export default class Game extends Component {
 				openCard: card
 			});
 		} else if (this.state.openCard.idx === newTileIdx) {
+			this.state.isboardLocked = true;
 			this.freezeCards(this.state.openCard, card);
 		} else {
+			this.state.isboardLocked = true;
 			this.resetCards(this.state.openCard, card);
 		}
 	}
@@ -44,7 +47,7 @@ export default class Game extends Component {
 	freezeCards(openCard, newCard) {
 		openCard.isMatched = true;
 		newCard.isMatched = true;
-		this.setState({openCard: ''});
+		this.setState({openCard: '', isboardLocked: false});
 	}
 
 
@@ -52,7 +55,7 @@ export default class Game extends Component {
 		setTimeout(()=>{
 			openCard.isFlipped = false;
 			newCard.isFlipped = false;
-			this.setState({openCard: ''});
+			this.setState({openCard: '', isboardLocked: false});
 		}, 1000);
 	}
 
@@ -74,18 +77,17 @@ export default class Game extends Component {
 		let cards = [...this.getRandomIndices((iconsetLength - 1), 0, halfCount)].map(cardIndex=> cardButtons[cardIndex]);
 		return [...this.getRandomIndices((count - 1), 0, count)].map((index, seqIdx)=> {
 			let card = (cards[index] || cards[index - halfCount]);
-				card['seqIdx'] = seqIdx;
-				return {...card};
-			});
+			card['seqIdx'] = seqIdx;
+			return {...card};
+		});
 	}
 
 	render() {
 		return (
 			<div className="Game">
-				{this.cards.map(card =>
-					<Card idx={card.idx} seq={card.seqIdx} matchCards={this.matchCards} iconName={card.iconName} isFlipped={card.isFlipped} isMatched={card.isMatched}/>)}
-			</div>
-		)
+			{this.cards.map(card =>
+			<Card idx={card.idx} seq={card.seqIdx} matchCards={this.matchCards} iconName={card.iconName} isFlipped={card.isFlipped} isMatched={card.isMatched}/>)}
+	</div>
+	)
 	}
 }
-
